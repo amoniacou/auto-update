@@ -3,8 +3,8 @@ import {
   group,
   info,
   setFailed,
-  warning,
   setOutput,
+  warning,
 } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 import type { GitHub } from "@actions/github/lib/utils.js";
@@ -83,13 +83,14 @@ const handleUnupdatablePullRequest = async (
     info(`Commented: ${newComment.html_url}`);
   } catch (error: unknown) {
     const { owner, repo } = context.repo;
-    let unmergedPrsJSON = getInput("unmerged_prs");
+    const unmergedPrsJSON = getInput("unmerged_prs");
     let unmergedPrs: string[];
     try {
-      unmergedPrs = JSON.parse(unmergedPrsJSON);
+      unmergedPrs = JSON.parse(unmergedPrsJSON) as string[];
     } catch {
       unmergedPrs = [];
     }
+
     unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
     setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
     warning(ensureError(error));
