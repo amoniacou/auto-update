@@ -83,7 +83,15 @@ const handleUnupdatablePullRequest = async (
     info(`Commented: ${newComment.html_url}`);
   } catch (error: unknown) {
     const { owner, repo } = context.repo;
-    setOutput("unmerged_pr", `/${owner}/${repo}/issues/${number}`);
+    let unmergedPrsJSON = getInput("unmerged_prs");
+    let unmergedPrs: string[];
+    try {
+      unmergedPrs = JSON.parse(unmergedPrsJSON);
+    } catch {
+      unmergedPrs = [];
+    }
+    unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
+    setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
     warning(ensureError(error));
   }
 };
