@@ -1,4 +1,11 @@
-import { getInput, group, info, setFailed, warning } from "@actions/core";
+import {
+  getInput,
+  group,
+  info,
+  setFailed,
+  setOutput,
+  warning,
+} from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 import type { GitHub } from "@actions/github/lib/utils.js";
 import type { PaginatingEndpoints } from "@octokit/plugin-paginate-rest";
@@ -19,13 +26,13 @@ const handleUnupdatablePullRequest = async (
     octokit: InstanceType<typeof GitHub>;
   }>,
 ): Promise<void> => {
+  const { number } = pullRequest;
   try {
     const {
       head: {
         repo: { full_name },
         sha,
       },
-      number,
     } = pullRequest;
 
     const [owner, repo] = full_name.split("/");
@@ -75,6 +82,17 @@ const handleUnupdatablePullRequest = async (
 
     info(`Commented: ${newComment.html_url}`);
   } catch (error: unknown) {
+    const { owner, repo } = context.repo;
+    const unmergedPrsJSON = getInput("unmerged_prs");
+    let unmergedPrs: string[];
+    try {
+      unmergedPrs = JSON.parse(unmergedPrsJSON) as string[];
+    } catch {
+      unmergedPrs = [];
+    }
+
+    unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
+    setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
     warning(ensureError(error));
   }
 };

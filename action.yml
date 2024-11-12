@@ -8,8 +8,11 @@ inputs:
   github_token:
     description: Token for the GitHub API.
     default: ${{ github.token }}
+outputs:
+  unmerged_prs:
+    description: The PR that could not be merged automatically.
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
 branding:
   icon: refresh-cw
