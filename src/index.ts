@@ -1,9 +1,7 @@
 import {
   getInput,
-  getState,
   group,
   info,
-  saveState,
   setFailed,
   setOutput,
   warning,
@@ -20,20 +18,11 @@ const unupdatablePullRequestCommentBody =
 type PullRequest =
   PaginatingEndpoints["GET /repos/{owner}/{repo}/pulls"]["response"]["data"][number];
 
+const unmergedPrsList: string[] = [];
+
 const addPRToOutput = (owner: string, repo: string, number: number) => {
-  const unmergedPrsJSON = getState("unmerged_prs") || "[]";
-  let unmergedPrs: string[];
-
-  try {
-    unmergedPrs = JSON.parse(unmergedPrsJSON) as string[];
-  } catch {
-    unmergedPrs = [];
-  }
-
-  unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
-
-  saveState("unmerged_prs", JSON.stringify(unmergedPrs));
-  setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
+  unmergedPrsList.push(`/${owner}/${repo}/issues/${number}`);
+  setOutput("unmerged_prs", JSON.stringify(unmergedPrsList));
 };
 
 const handleUnupdatablePullRequest = async (
