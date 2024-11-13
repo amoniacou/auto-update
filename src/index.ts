@@ -1,7 +1,9 @@
 import {
   getInput,
+  getState,
   group,
   info,
+  saveState,
   setFailed,
   setOutput,
   warning,
@@ -18,6 +20,22 @@ const unupdatablePullRequestCommentBody =
 type PullRequest =
   PaginatingEndpoints["GET /repos/{owner}/{repo}/pulls"]["response"]["data"][number];
 
+const addPRToOutput = (owner: string, repo: string, number: number) => {
+  const unmergedPrsJSON = getState("unmerged_prs") || "[]";
+  let unmergedPrs: string[];
+
+  try {
+    unmergedPrs = JSON.parse(unmergedPrsJSON) as string[];
+  } catch {
+    unmergedPrs = [];
+  }
+
+  unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
+
+  saveState("unmerged_prs", JSON.stringify(unmergedPrs));
+  setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
+};
+
 const handleUnupdatablePullRequest = async (
   pullRequest: PullRequest,
   {
@@ -26,13 +44,13 @@ const handleUnupdatablePullRequest = async (
     octokit: InstanceType<typeof GitHub>;
   }>,
 ): Promise<void> => {
-  const { number } = pullRequest;
   try {
     const {
       head: {
         repo: { full_name },
         sha,
       },
+      number,
     } = pullRequest;
 
     const [owner, repo] = full_name.split("/");
@@ -64,6 +82,8 @@ const handleUnupdatablePullRequest = async (
       ({ body }) => body === unupdatablePullRequestCommentBody,
     );
 
+    addPRToOutput(owner, repo, number);
+
     if (existingUnupdatablePullRequestComment) {
       info(
         `Already commented since last commit: ${existingUnupdatablePullRequestComment.html_url}`,
@@ -82,17 +102,6 @@ const handleUnupdatablePullRequest = async (
 
     info(`Commented: ${newComment.html_url}`);
   } catch (error: unknown) {
-    const { owner, repo } = context.repo;
-    const unmergedPrsJSON = getInput("unmerged_prs");
-    let unmergedPrs: string[];
-    try {
-      unmergedPrs = JSON.parse(unmergedPrsJSON) as string[];
-    } catch {
-      unmergedPrs = [];
-    }
-
-    unmergedPrs.push(`/${owner}/${repo}/issues/${number}`);
-    setOutput("unmerged_prs", JSON.stringify(unmergedPrs));
     warning(ensureError(error));
   }
 };
