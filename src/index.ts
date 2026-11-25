@@ -7,7 +7,7 @@ import {
   warning,
 } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
-import type { GitHub } from "@actions/github/lib/utils.js";
+import type { GitHub } from "@actions/github/lib/utils";
 import type { PaginatingEndpoints } from "@octokit/plugin-paginate-rest";
 import type { PushEvent } from "@octokit/webhooks-definitions/schema.js";
 import ensureError from "ensure-error";
